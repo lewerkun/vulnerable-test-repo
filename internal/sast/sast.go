@@ -12,13 +12,13 @@ import (
 // WARNING: Contains SAST vulnerabilities for testing purposes only.
 // DO NOT USE IN PRODUCTION.
 
-// SAST Vulnerability 1: Obvious SQL Injection
-// QueryUserData constructs an SQL query VERY unsafely using direct concatenation.
+// SAST Vulnerability 1: Obvious SQL Injection via Sprintf
+// QueryUserData constructs an SQL query VERY unsafely using fmt.Sprintf.
 func QueryUserData(db *sql.DB, userInput string) {
-	// VERY VULNERABLE: Direct use of user input in SQL query string.
-	// This is a classic SQL Injection vulnerability.
-	// A scanner should definitely flag this line.
-	query := "SELECT username, password FROM users WHERE user_id = '" + userInput + "'"
+	// VERY VULNERABLE: Direct use of user input in Sprintf for SQL query.
+	// This is a classic SQL Injection vulnerability (gosec G201).
+	// A scanner using gosec rules should definitely flag this line.
+	query := fmt.Sprintf("SELECT username, password FROM users WHERE user_id = '%s'", userInput)
 
 	fmt.Println("Executing potentially malicious query:", query)
 
