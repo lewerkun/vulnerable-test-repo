@@ -12,42 +12,39 @@ import (
 // WARNING: Contains SAST vulnerabilities for testing purposes only.
 // DO NOT USE IN PRODUCTION.
 
-// SAST Vulnerability 1: SQL Injection
-// QueryUserData constructs an SQL query unsafely using string concatenation.
-func QueryUserData(db *sql.DB, userID string) {
-	// This is vulnerable to SQL Injection because userID is directly concatenated.
-	query := "SELECT * FROM users WHERE id = '" + userID + "'"
-	fmt.Println("Executing query:", query) // Simulate execution
+// SAST Vulnerability 1: Obvious SQL Injection
+// QueryUserData constructs an SQL query VERY unsafely using direct concatenation.
+func QueryUserData(db *sql.DB, userInput string) {
+	// VERY VULNERABLE: Direct use of user input in SQL query string.
+	// This is a classic SQL Injection vulnerability.
+	// A scanner should definitely flag this line.
+	query := "SELECT username, password FROM users WHERE user_id = '" + userInput + "'"
+
+	fmt.Println("Executing potentially malicious query:", query)
 
 	// Example of how it might be used (commented out as DB is not connected)
-	// rows, err := db.Query(query)
+	// _, err := db.Exec(query) // Using Exec instead of Query for variation
 	// if err != nil {
-	// 	log.Fatal(err)
+	// 	log.Fatal("SQL execution error (expected if injected):", err)
 	// }
-	// defer rows.Close()
-	// ... process rows ...
 }
 
-// SAST Vulnerability 2: Command Injection
-// ExecuteCommand executes a system command unsafely using user input.
-func ExecuteCommand(command string, args string) ([]byte, error) {
-	// This is vulnerable to Command Injection because args are passed directly.
-	cmdPath, err := exec.LookPath(command)
-	if err != nil {
-		log.Printf("Command not found: %s", command)
-		return nil, err
-	}
+// SAST Vulnerability 2: Obvious Command Injection
+// ExecuteCommand executes a system command VERY unsafely.
+func ExecuteCommand(userSuppliedCommand string) ([]byte, error) {
+	// VERY VULNERABLE: The user input is directly used as the command.
+	// This allows arbitrary command execution.
+	// A scanner should definitely flag this line.
+	fmt.Printf("Executing potentially malicious command: %s\n", userSuppliedCommand)
 
-	fmt.Printf("Executing command: %s %s\n", cmdPath, args) // Simulate execution
+	// No path lookup, no argument separation. Raw execution.
+	// This is extremely dangerous and a clear command injection.
+	cmd := exec.Command("sh", "-c", userSuppliedCommand) // Classic injection pattern
 
-	// This line allows command injection via the 'args' parameter.
-	cmd := exec.Command(cmdPath, args) // Vulnerable line
-
-	// For demonstration, let's just capture output. In a real scenario, this might modify the system.
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Printf("Error executing command: %v", err)
-		return output, err
+		log.Printf("Error executing command (expected if injected): %v", err)
+		// Returning output even on error for demonstration
 	}
-	return output, nil
+	return output, err
 }
